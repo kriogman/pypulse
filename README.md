@@ -97,3 +97,52 @@ kubectl patch cronjob pulse-checker -p '{"spec":{"schedule":"*/1 * * * *"}}'
 # Limpiar
 kind delete cluster --name pulse-test
 ```
+
+## 🗺️ Roadmap
+
+Proyecto de aprendizaje de Python moderno (async, type hints, packaging con uv)
+y de despliegue en Kubernetes. Las versiones siguen [Semantic Versioning](https://semver.org/).
+
+### ✅ v0.1.0 — MVP
+- [x] CLI con Click y subcomando `check`
+- [x] Lectura de targets desde YAML con validación via Pydantic
+- [x] Chequeo paralelo con `asyncio` + `httpx`
+- [x] Output en formato `text` y `json`
+- [x] Exit codes útiles para CI
+- [x] Tests con `pytest` + `pytest-asyncio` + `respx`
+- [x] Dockerfile multi-stage
+- [x] Despliegue como CronJob en Kubernetes con Kustomize
+
+### 🚧 v0.2.0 — Observabilidad básica
+- [ ] Logging estructurado con `structlog`
+- [ ] Output JSON para logs (facilita ingesta en Loki / ELK)
+- [ ] Niveles de log configurables (`--log-level`)
+
+### 📋 v0.3.0 — Resiliencia
+- [ ] Retries con backoff exponencial (`tenacity`)
+- [ ] Configuración de reintentos por target en el YAML
+- [ ] Timeout configurable por target además del global
+
+### 📋 v0.4.0 — Modo daemon
+- [ ] Subcomando `serve` con scheduler interno (`apscheduler` o asyncio puro)
+- [ ] Endpoint `/metrics` con `prometheus-client`
+- [ ] Endpoint `/healthz` con FastAPI o Starlette
+- [ ] Graceful shutdown con signal handlers
+
+### 📋 v0.5.0 — CI/CD y distribución
+- [ ] GitHub Actions: lint (`ruff`), type check (`mypy`), tests (`pytest`)
+- [ ] GitHub Actions: build y push de imagen a GHCR
+- [ ] Publicación en PyPI con `uv publish`
+- [ ] Helm chart para despliegue en Kubernetes
+
+### 💡 Ideas futuras (sin versión asignada)
+- [ ] Notificaciones a Slack / Discord / webhook en fallos
+- [ ] Chequeos TCP, DNS y validación de certificados TLS
+- [ ] Soporte para autenticación (Bearer token, mTLS)
+- [ ] Dashboard web con FastAPI + HTMX
+- [ ] Comparativa de rendimiento y tamaño de imagen vs la versión en Go
+      (`pulse`), como ejercicio didáctico
+
+---
+
+Las contribuciones e ideas son bienvenidas vía issues.
