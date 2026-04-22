@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pulse-config
+  # namespace: monitoring  # Descomenta y ajusta al namespace correcto
+  labels:
+    app: pulse
+data:
+  # El contenido del pulse.yaml se almacena aquí como string literal (|).
+  # El CronJob lo monta en /etc/pulse/pulse.yaml dentro del contenedor.
+  # Ventaja: cambiar la config no requiere rebuild de la imagen Docker,
+  # solo actualizar este ConfigMap y el próximo Job usará el nuevo config.
+  pulse.yaml: |
+    targets:
+      - name: google
+        url: https://www.google.com
+        expected_status: 200
+        max_latency_ms: 1000
+
+      - name: github
+        url: https://github.com
+        expected_status: 200
+        max_latency_ms: 2000
+
+      - name: httpbin-get
+        url: https://httpbin.org/get
+        expected_status: 200
+        max_latency_ms: 3000

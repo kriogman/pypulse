@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# kustomization.yaml permite aplicar todos los manifiestos de este directorio
+# con un solo comando: kubectl apply -k k8s/
+#
+# Kustomize es nativo en kubectl (no necesita instalación extra).
+# Permite overlays: un directorio base con la config genérica y directorios
+# dev/staging/prod que sobreescriben solo lo que cambia (namespace, imagen, etc.)
+
+resources:
+  - configmap.yaml
+  - cronjob.yaml
+
+# commonLabels añade estas etiquetas a TODOS los recursos del kustomization.
+# Útil para filtrar con: kubectl get all -l project=pulse
+commonLabels:
+  project: pulse
+  managed-by: kustomize

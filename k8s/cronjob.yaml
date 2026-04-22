@@ -1,0 +1,90 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pulse-checker
+  # namespace: monitoring
+  labels:
+    app: pulse
+spec:
+  # Sintaxis cron estándar: minuto hora día-mes mes día-semana
+  # */5 * * * * = cada 5 minutos
+  schedule: "*/5 * * * *"
+
+  # Qué hacer si el Job anterior todavía está corriendo cuando llega
+  # la siguiente ejecución.
+  # - Forbid: no lanza el nuevo (conservador, evita solapamiento)
+  # - Replace: cancela el anterior y lanza el nuevo
+  # - Allow: lanza ambos en paralelo (peligroso para este caso)
+  concurrencyPolicy: Forbid
+
+  # Cuántos Jobs completados/fallidos conservar en el historial.
+  # Útil para ver logs de ejecuciones pasadas con kubectl logs.
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+
+  jobTemplate:
+    spec:
+      # Si el Job falla, K8s lo reintentará hasta backoffLimit veces.
+      # Para un health check cada 5 minutos, 1 reintento es suficiente:
+      # si falla dos veces seguidas, queremos que quede en estado Failed
+      # para que las alertas lo detecten.
+      backoffLimit: 1
+
+      # Tiempo máximo que puede correr el Job antes de ser cancelado.
+      # pulse debería terminar en segundos, 60s es un margen muy generoso.
+      activeDeadlineSeconds: 60
+
+      template:
+        metadata:
+          labels:
+            app: pulse
+        spec:
+          # OnFailure: si el contenedor sale con código != 0, K8s reinicia
+          # el Pod (hasta backoffLimit). No usar Always (eso es para Deployments).
+          restartPolicy: OnFailure
+
+          containers:
+            - name: pulse
+              # Cambia por tu registry real: ghcr.io/tu-org/pulse:v0.1.0
+              image: pulse:latest
+              imagePullPolicy: IfNotPresent  # Usa imagen local en desarrollo
+
+              command:
+                - pulse
+                - check
+                - -c
+                - /etc/pulse/pulse.yaml
+
+              # Recursos: pulse es un CLI que dura segundos.
+              # requests: lo que K8s reserva en el nodo para este Pod.
+              # limits: el máximo que puede usar. Si supera memory limit,
+              # el kernel mata el proceso (OOMKilled).
+              resources:
+                requests:
+                  cpu: "50m"     # 50 millicores = 0.05 CPUs
+                  memory: "64Mi"
+                limits:
+                  cpu: "200m"    # Ráfaga máxima: 0.2 CPUs
+                  memory: "128Mi"
+
+              # Variables de entorno opcionales (útiles para debugging)
+              env:
+                - name: PYTHONUNBUFFERED
+                  value: "1"  # Fuerza stdout/stderr sin buffer → logs aparecen inmediatamente
+
+              volumeMounts:
+                - name: pulse-config
+                  mountPath: /etc/pulse  # El ConfigMap aparece aquí como fichero
+                  readOnly: true
+
+          volumes:
+            - name: pulse-config
+              configMap:
+                name: pulse-config  # Debe coincidir con metadata.name del ConfigMap
+                items:
+                  - key: pulse.yaml       # La key del ConfigMap
+                    path: pulse.yaml      # El nombre de fichero dentro de mountPath
+
+          # Evita correr en nodos que no queremos (opcional)
+          # nodeSelector:
+          #   role: monitoring

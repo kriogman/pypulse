@@ -1,0 +1,37 @@
+# .dockerignore — qué NO copiar al contexto de build de Docker.
+# Cuanto menos se copie, más rápido el build y menor la superficie de ataque.
+
+# Entorno virtual local (las deps se instalan dentro del contenedor)
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Artefactos de build y distribución
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Tests y herramientas de desarrollo (no necesarias en producción)
+tests/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Git y metadatos del repositorio
+.git/
+.gitignore
+
+# Ficheros de configuración local que no deben ir al contenedor
+.env
+.env.*
+pulse.yaml   # El config se monta como ConfigMap en K8s, no se bakkea en la imagen
+
+# Documentación
+README.md
+docs/
+
+# K8s (no necesario dentro de la imagen)
+k8s/

@@ -1,0 +1,24 @@
+# pulse.yaml — Configuración de ejemplo con targets reales para probar localmente.
+# En K8s este fichero vivirá en un ConfigMap y se montará como volumen.
+
+targets:
+  - name: google
+    url: https://www.google.com
+    expected_status: 200
+    max_latency_ms: 1000
+
+  - name: github
+    url: https://github.com
+    expected_status: 200
+    max_latency_ms: 2000
+
+  - name: httpbin-get
+    url: https://httpbin.org/get
+    expected_status: 200
+    max_latency_ms: 3000
+
+  # Ejemplo de target que fallará (para ver el output de FAIL)
+  - name: endpoint-inexistente
+    url: https://httpbin.org/status/503
+    expected_status: 200   # Esperamos 200 pero devuelve 503 → FAIL
+    max_latency_ms: 2000

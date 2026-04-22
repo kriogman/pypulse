@@ -1,0 +1,53 @@
+[build-system]
+# build-system define cómo se construye el paquete.
+# hatchling es el backend por defecto de uv; convierte el src/ en un paquete instalable.
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pulse"
+version = "0.1.0"
+description = "CLI para chequear endpoints HTTP en paralelo"
+readme = "README.md"
+requires-python = ">=3.12"
+
+# Dependencias de producción — lo que necesita pulse para correr.
+dependencies = [
+    "click>=8.1",       # Framework para CLIs: argumentos, opciones, subcomandos
+    "httpx>=0.27",      # Cliente HTTP async moderno (reemplaza requests para async)
+    "pyyaml>=6.0",      # Parsear ficheros YAML
+    "pydantic>=2.0",    # Validación de datos con type hints (falla rápido si el YAML está mal)
+]
+
+[project.scripts]
+# Entry point: al instalar el paquete, uv/pip crean un ejecutable llamado "pulse"
+# que llama a la función main() en pulse.main.
+# Así podemos hacer: uv run pulse check
+pulse = "pulse.main:main"
+
+[dependency-groups]
+# Dependencias solo para desarrollo/tests — no van en la imagen Docker de prod.
+dev = [
+    "pytest>=8.0",          # Framework de tests
+    "pytest-asyncio>=0.23", # Soporte para tests con async/await
+    "respx>=0.21",          # Mock de httpx para tests (intercepta las llamadas HTTP)
+    "ruff>=0.4",            # Linter + formatter (reemplaza flake8, isort, black)
+]
+
+[tool.hatch.build.targets.wheel]
+# Le dice a hatchling dónde está el código fuente.
+# src layout: el paquete está en src/pulse/, no en la raíz.
+packages = ["src/pulse"]
+
+[tool.pytest.ini_options]
+# asyncio_mode = "auto" hace que pytest-asyncio detecte automáticamente
+# las funciones async y las corra con el event loop correcto.
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88  # Mismo que black por convención
+
+[tool.ruff.lint]
+# E/W: errores pycodestyle, F: pyflakes, I: isort (orden de imports)
+select = ["E", "W", "F", "I"]
